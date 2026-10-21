@@ -14,8 +14,9 @@ Tested with a Baumer VCXG.2-32C (IMX265, 2048×1536, BayerRG8) on Ubuntu x86_64,
 
 ## Setup
 
-1. **neoAPI** is not on PyPI. Download *Baumer neoAPI for Python* (Linux x86_64) from the
-   [Baumer website](https://www.baumer.com/neoapi) and install the wheel:
+1. **neoAPI** is not on PyPI. Download *Baumer neoAPI for Python* (Linux x86_64, tested with 1.6.0)
+   from [Baumer's download share](https://share.baumer.com/link/LOGs9VX19zsMViE1Y5JYgK),
+   unpack it, and install the wheel:
    ```bash
    conda create -n ds-neoapi python=3.10
    conda activate ds-neoapi
