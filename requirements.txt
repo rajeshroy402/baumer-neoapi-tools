@@ -1,0 +1,4 @@
+# plus the Baumer neoAPI wheel (not on PyPI, see README)
+numpy
+opencv-python        # capture_cv.py
+PySide6-Essentials==6.4.3  # camera_gui.py; newer versions need the libxcb-cursor0 system package

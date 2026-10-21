@@ -1,0 +1,12 @@
+# Baumer SDK (download from baumer.com; see README)
+Baumer_neoAPI_*/
+*.whl
+
+# runtime output
+snapshots/
+frames/
+*.png
+!docs/*.png
+
+__pycache__/
+*.pyc
