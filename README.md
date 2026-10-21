@@ -8,7 +8,8 @@ Python tools for Baumer GigE Vision cameras using the Baumer **neoAPI**:
 | `capture_cv.py` | Grab frames with neoAPI and show/save them with OpenCV (headless mode, FPS readout, exposure override) |
 | `smoke.py` | Connects to the first camera and grabs one frame: a quick "does it work" check |
 
-Tested with a Baumer VCXG.2-32C (IMX265, 2048×1536, BayerRG8) on Ubuntu x86_64, Python 3.10, neoAPI 1.6.0.
+Tested with a Baumer VCXG.2-32C (IMX265, 2048×1536, BayerRG8) on Ubuntu 22.04 x86_64, Python 3.10,
+neoAPI 1.6.0, PySide6 6.4.3, OpenCV 4.10 and 5.0.
 
 ![GUI](docs/gui.png)
 
@@ -37,11 +38,15 @@ Tested with a Baumer VCXG.2-32C (IMX265, 2048×1536, BayerRG8) on Ubuntu x86_64,
        ipv4.never-default yes ipv6.method disabled
    nmcli con up "<camera connection>"
    ```
-   For full-rate streaming, enable jumbo frames (MTU 9000) on that port and raise the socket
-   receive buffers:
+   For full-rate streaming, enable jumbo frames on that port and raise the socket receive buffer
+   (value recommended by Baumer):
    ```bash
-   sudo sysctl -w net.core.rmem_max=33554432 net.core.rmem_default=33554432
+   nmcli con mod "<camera connection>" 802-3-ethernet.mtu 9000 && nmcli con up "<camera connection>"
+   echo "net.core.rmem_max = 67108864" | sudo tee /etc/sysctl.d/99-gige.conf
+   sudo sysctl --system
    ```
+   USB3 cameras need no network setup, but non-root access needs Baumer's udev rule:
+   `sudo cp Baumer_neoAPI_*/drivers/udev_rules/99-baumer-cameras.rules /etc/udev/rules.d/`, then reboot.
 
 Only one application can control a GigE camera at a time: disconnect it in Camera Explorer
 (or close other scripts) before running these.
@@ -92,4 +97,20 @@ python capture_cv.py --no-display --frames 100 --save-dir ./frames --save-every 
 python capture_cv.py --synthetic             # no camera: test the OpenCV side only
 ```
 
-Window keys: `q` / `Esc` quit, `s` saves the current frame.
+Window keys: `q` / `Esc` (or closing the window) quit, `s` saves the current frame.
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| `NotConnectedException: No device with '' found` | Camera not visible: check the cable / USB-Ethernet adapter (`ip -br link`), and that the camera's port has an IPv4 address in the camera's subnet (Setup step 2). A camera with a persistent IP in another subnet can be fixed with `gevipconfig` from the SDK's `tools/` folder, or with Camera Explorer. |
+| `NoAccessException: ... possibly used by someone else` | Another program (Camera Explorer, another script) has the camera open. Disconnect it there. |
+| Camera found in Camera Explorer but not in Python | Same as above: Explorer still holds the camera. |
+| Low frame rate | Usually exposure-bound: with `ExposureAuto` on, a dim scene gives long exposures. Add light, raise `GainAutoMaxValue`, or set a fixed `ExposureTime`. At full resolution 1 GigE carries ~39 fps of 8-bit frames. |
+| Incomplete / dropped frames | Raise `net.core.rmem_max` and enable MTU 9000 (Setup step 2). |
+| `pip check`: `baumer-neoapi 1.6.0 is not supported on this platform` | Harmless: the wheel uses the generic `linux_x86_64` tag. It installs and runs fine. |
+
+## License
+
+[MIT](LICENSE). The Baumer neoAPI and Camera Explorer are separate downloads under Baumer's own
+license terms and are not part of this repository.

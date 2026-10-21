@@ -7,7 +7,7 @@
   python capture_cv.py --no-display --frames 100 --save-dir ./frames --save-every 25
   python capture_cv.py --synthetic             # no camera: tests the OpenCV side only
 
-Window keys: q / ESC = quit, s = save current frame.
+Window keys: q / ESC (or closing the window) = quit, s = save current frame.
 """
 import argparse
 import sys
@@ -71,7 +71,8 @@ def save_frame(frame, save_dir, n):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--serial", help="camera serial number (default: first camera found)")
-    ap.add_argument("--exposure-us", type=float, help="exposure time in microseconds")
+    ap.add_argument("--exposure-us", type=float,
+                    help="exposure time in microseconds (turns ExposureAuto off until changed back)")
     ap.add_argument("--frames", type=int, default=0, help="stop after N frames (0 = run until quit)")
     ap.add_argument("--no-display", action="store_true", help="do not open a window")
     ap.add_argument("--save-dir", default=".", help="where saved frames go (default: current dir)")
@@ -122,8 +123,8 @@ def main():
                     key = cv2.waitKey(1) & 0xFF
                 except cv2.error as e:
                     sys.exit(f"cannot open a window ({e}); rerun with --no-display")
-                if key in (27, ord("q")):
-                    break
+                if key in (27, ord("q")) or cv2.getWindowProperty("capture", cv2.WND_PROP_VISIBLE) < 1:
+                    break   # q / ESC, or the window was closed
                 if key == ord("s"):
                     save_frame(frame, args.save_dir, n)
     except KeyboardInterrupt:

@@ -126,6 +126,8 @@ def parse_int(text, rep):
         return int.from_bytes(socket.inet_aton(t), "big")
     if rep == "MACAddress":
         return int(re.sub(r"[:\-]", "", t), 16)
+    if rep == "HexNumber":
+        return int(t, 16)   # "ff" or "0xff"
     return int(t, 0)
 
 
@@ -622,6 +624,10 @@ class FeatureRow:
         on = self.writable and s.get("readable", True) and "error" not in s
         if isinstance(w, NumberEditor):
             w.set_writable(on)
+        elif isinstance(w, QtWidgets.QLineEdit):
+            # read-only rather than disabled, so values like the serial number can be copied
+            w.setReadOnly(not on)
+            w.setStyleSheet("" if on else "color: #8c8c8c;")
         elif not isinstance(w, QtWidgets.QLabel):
             w.setEnabled(on)
 
@@ -730,7 +736,8 @@ class FeaturePanel(QtWidgets.QWidget):
     def _add(self, parent, node, features, bold):
         if isinstance(node, str):
             f = features[node]
-            if f.GetVisibility() not in LEVELS:      # "Invisible": not meant for GUIs
+            # "Invisible" features are not meant for GUIs; a feature may also sit in two categories
+            if f.GetVisibility() not in LEVELS or node in self.rows:
                 return
             item = QtWidgets.QTreeWidgetItem(parent) if parent else QtWidgets.QTreeWidgetItem(self.tree)
             self.rows[node] = FeatureRow(self, f, item)
@@ -1013,7 +1020,11 @@ def connect_camera(serial):
         except Exception as e:
             msg = first_line(e)
             if "NoAccess" in type(e).__name__ or "used by someone else" in msg:
-                msg += "\n\nIf Camera Explorer or another script has the camera open, disconnect it there and press Retry."
+                msg += ("\n\nIf Camera Explorer or another script has the camera open, "
+                        "disconnect it there and press Retry.")
+            elif "NotConnected" in type(e).__name__ or "No device" in msg:
+                msg += ("\n\nCheck the cable / network adapter, and that the camera's network port "
+                        "has an IPv4 address in the camera's subnet (see README).")
             buttons = QtWidgets.QMessageBox.StandardButton
             if QtWidgets.QMessageBox.critical(None, "Camera not available", msg,
                                               buttons.Retry | buttons.Cancel) != buttons.Retry:
