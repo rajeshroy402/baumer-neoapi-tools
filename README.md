@@ -12,6 +12,13 @@ Tested with a Baumer VCXG.2-32C (IMX265, 2048×1536, BayerRG8) on Ubuntu x86_64,
 
 ![GUI](docs/gui.png)
 
+## Downloads
+
+| Software | Needed for | Link |
+|---|---|---|
+| Baumer neoAPI for Python (Linux x86_64) | all scripts | [download](https://share.baumer.com/link/LOGs9VX19zsMViE1Y5JYgK) |
+| Baumer Camera Explorer | optional: check the camera is visible, set its IP, update firmware | [download](https://share.baumer.com/link/YZPn1sBxVLBYYSheOmpn8l) |
+
 ## Setup
 
 1. **neoAPI** is not on PyPI. Download *Baumer neoAPI for Python* (Linux x86_64, tested with 1.6.0)
